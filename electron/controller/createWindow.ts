@@ -14,7 +14,7 @@ interface IGroup {
 
 export default class CreateWindow {
   // 路由与主窗口标识
-  private public static group: IGroup = []
+  private static group: IGroup = []
   // 记录主窗口
   private static main: BrowserWindow | null | undefined = null
   // 窗口配置项
