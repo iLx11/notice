@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import WindowTools from '../components/WindowTools.vue'
+import WindowTools from './WindowTools.vue'
 
 const win = window as any
-
 </script>
 
 <template>
@@ -34,5 +33,4 @@ const win = window as any
   margin-bottom: 0.3em;
   -webkit-app-region: drag;
 }
-
 </style>

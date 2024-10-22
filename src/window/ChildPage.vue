@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import WindowTitle from '../components/WindowTitle.vue'
-import PopBox from '../components/PopBox.vue'
+import WindowTitle from '../components/tools/WindowTitle.vue'
 
 const win = window as any
 
 const createWindow = () => {
-  win.myApi.createNewWindow({
-    route: '/child1',
-  }, {
-    width: 300,
-    height: 300
-  })
+  win.myApi.createNewWindow(
+    {
+      route: '/child1',
+    },
+    {
+      width: 300,
+      height: 300,
+    }
+  )
 }
-
 </script>
 
 <template>

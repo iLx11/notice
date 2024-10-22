@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import WindowTools from '../components/WindowTools.vue'
-import WindowTitle from '../components/WindowTitle.vue'
+import WindowTools from '../components/tools/WindowTools.vue'
+import WindowTitle from '../components/tools/WindowTitle.vue'
 import { onMounted, nextTick, ref, watch } from 'vue'
-import PopBox from '../components/PopBox.vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -13,11 +12,11 @@ const createWindow = () => {
   console.log(router.currentRoute.value.path)
   win.myApi.createNewWindow(
     {
-      route: '/child'
+      route: '/child',
     },
     {
       width: 500,
-      height: 500
+      height: 500,
     }
   )
 }
@@ -25,7 +24,10 @@ const createWindow = () => {
 
 <template>
   <PopBox ref="popBoxRef" />
-  <div class="container" @click="createWindow">
+  <div
+    class="container"
+    @click="createWindow"
+  >
     <WindowTitle>
       <div>HomePage</div>
     </WindowTitle>

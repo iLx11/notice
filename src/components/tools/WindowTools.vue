@@ -6,7 +6,6 @@ const win = window as any
 
 // let isMac = ref<boolean>(os.platform() == 'darwin')
 
-
 let closeWindow = () => {
   win.myApi.closeWindow()
   // ipcRenderer.send('window-close')
@@ -19,7 +18,6 @@ let minimizeMainWindow = () => {
   win.myApi.minimizeWindow()
   // ipcRenderer.send('window-min')
 }
-
 </script>
 <template>
   <div class="topBar">
@@ -37,11 +35,10 @@ let minimizeMainWindow = () => {
   </div>
 </template>
 <style scoped lang="scss">
-
 .topBar {
   height: 27px;
   line-height: 25px;
-  width:125px;
+  width: 125px;
   position: absolute;
   top: 1em;
   right: 1em;
@@ -56,9 +53,8 @@ let minimizeMainWindow = () => {
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
-
 }
-.winTool >div {
+.winTool > div {
   text-align: center;
   color: #999;
   cursor: pointer;
@@ -71,11 +67,10 @@ let minimizeMainWindow = () => {
   }
   .tool1 {
     background: rgb(169, 248, 182);
-
   }
-  .tool2, .tool3 {
+  .tool2,
+  .tool3 {
     background: rgb(245, 229, 190);
-
   }
   .tool4 {
     background: rgb(250, 206, 203);

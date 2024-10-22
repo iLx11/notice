@@ -17,55 +17,23 @@ ipcMain.on('window-create', (event, optionObj: object, configObj: object) => {
 // 创建主窗口
 const createMainWindow = async () => {
   let mainW = new CreateWindow()
-  mainW.createWindow({
-    route: '/home',
-    isMainWin: true,
-  }, {
-    width: 900,
-    height: 700
-  })
+  mainW.createWindow(
+    {
+      route: '/home',
+      isMainWin: true,
+    },
+    {
+      width: 900,
+      height: 700,
+    }
+  )
 }
 
 app.commandLine.appendSwitch('--ignore-certificate-errors', 'true')
 // Scheme must be registered before the app is ready
-protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
-
-const createWindow = () => {
-  const win = new BrowserWindow({
-    //窗口是否在屏幕居中. 默认值为 false
-    center: true,
-    //设置为 false 时可以创建一个无边框窗口 默认值为 true。
-    frame: false,
-    //窗口是否在创建时显示。 默认值为 true。
-    show: true,
-    width: 999,
-    height: 773,
-    transparent: true,
-    maxWidth: 999,
-    maxHeight: 773,
-    minWidth: 688,
-    minHeight: 560,
-    webPreferences: {
-      // nodeIntegration: true,
-      // contextIsolation:false,
-      // nodeIntegrationInWorker: true,
-      // webSecurity: false,
-      // sandbox: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, '../preload/preload.js')
-    }
-  })
-  win.setMenu(null)
-  // 如果打包，就渲染 index.html
-  if (app.isPackaged) {
-    win.loadURL(`file://${path.join(__dirname, '../../dist/index.html')}`)
-    win.webContents.openDevTools()
-  } else {
-    // win.loadURL('http://127.0.0.1:5173/')
-    win.loadURL('http://localhost:5173/#/home')
-    win.webContents.openDevTools()
-  }
-}
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, standard: true } },
+])
 
 app.whenReady().then(() => {
   // 创建窗口
