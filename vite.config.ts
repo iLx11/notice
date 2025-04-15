@@ -2,6 +2,8 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron'
+import VueDevTools from 'vite-plugin-vue-devtools'
+
 // import electronRenderer from 'vite-plugin-electron/renderer'
 // import polyfillExports from 'vite-plugin-electron/polyfill-exports'
 // import optimizer from 'vite-plugin-optimizer'
@@ -36,6 +38,7 @@ export default defineConfig({
   base: './',
   plugins: [
     // optimizer(getReplacer()),
+    // VueDevTools(),
     vue(),
     electron([
       {

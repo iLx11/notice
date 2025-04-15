@@ -20,11 +20,12 @@
     "pinia": "^2.1.6"
   },
   "devDependencies": {
-    "electron": "26.6.10",
+    "vite-plugin-vue-devtools": "^7.7.2",
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^18.17.17",
     "@vitejs/plugin-vue": "^4.3.4",
     "@vue/tsconfig": "^0.4.0",
+    "electron": "33.0.2",
     "electron-builder": "22.10.0",
     "npm-run-all2": "^6.0.6",
     "rimraf": "^5.0.5",
@@ -40,7 +41,7 @@
   },
   "build": {
     "appId": "com.xxx.xxx",
-    "productName": "xxx",
+    "productName": "Notice",
     "copyright": "Copyright © 2023 iLx1",
     "directories": {
       "output": "dist_electron"

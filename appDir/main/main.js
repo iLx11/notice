@@ -1,18 +1,30 @@
 "use strict";
 const electron = require("electron");
-const path$1 = require("path");
-const { ipcMain: ipcMain$1, BrowserWindow: BrowserWindow$1 } = require("electron");
+const path$2 = require("path");
+const { ipcMain: ipcMain$1, BrowserWindow: BrowserWindow$1, screen: screen$1 } = require("electron");
 const windowControlListener = () => {
+  ipcMain$1.handle("get-screen-size", () => {
+    const primaryDisplay = screen$1.getPrimaryDisplay();
+    return primaryDisplay.size;
+  });
+  ipcMain$1.on("window-on-top", (event, state) => {
+    const webContent = event.sender;
+    const win = BrowserWindow$1.fromWebContents(webContent);
+    win.setAlwaysOnTop(state);
+  });
   ipcMain$1.on("window-min", (event) => {
     const webContent = event.sender;
     const win = BrowserWindow$1.fromWebContents(webContent);
     win.minimize();
   });
-  ipcMain$1.on("window-max", (event) => {
+  ipcMain$1.on("window-max", (event, state, windowSize = {}) => {
     const webContent = event.sender;
     const win = BrowserWindow$1.fromWebContents(webContent);
-    if (win.isMaximized()) {
-      win.unmaximize();
+    if (state) {
+      const { width: screenWidth, height: screenHeight } = screen$1.getPrimaryDisplay().workAreaSize;
+      const x = Math.round((screenWidth - windowSize.width) / 2);
+      const y = Math.round((screenHeight - windowSize.height) / 2);
+      win.setBounds({ ...windowSize, x, y });
     } else {
       win.maximize();
     }
@@ -22,8 +34,13 @@ const windowControlListener = () => {
     const win = BrowserWindow$1.fromWebContents(webContent);
     win.close();
   });
+  ipcMain$1.on("window-hide", (event) => {
+    const webContent = event.sender;
+    const win = BrowserWindow$1.fromWebContents(webContent);
+    win.hide();
+  });
 };
-const path = require("path");
+const path$1 = require("path");
 const _CreateWindow = class _CreateWindow {
   constructor() {
     this.getWindowById = (id) => {
@@ -69,12 +86,12 @@ const _CreateWindow = class _CreateWindow {
       //设置为 false 时可以创建一个无边框窗口 默认值为 true。
       frame: false,
       //窗口是否在创建时显示。 默认值为 true。
-      show: true,
+      show: false,
       transparent: true,
       maxWidth: null,
       maxHeight: null,
-      minWidth: 680,
-      minHeight: 500,
+      minWidth: null,
+      minHeight: null,
       backgroundColor: "rgba(0,0,0,0)",
       autoHideMenuBar: true,
       resizable: true,
@@ -94,11 +111,16 @@ const _CreateWindow = class _CreateWindow {
         webSecurity: false,
         // sandbox: false,
         nodeIntegration: true,
-        preload: path.join(__dirname, "../preload/preload.js")
+        preload: path$1.join(__dirname, "../preload/preload.js")
       }
     };
   }
-  // 创建窗口
+  /********************************************************************************
+   * @brief: 创建窗口
+   * @param {object} configurations
+   * @param {object} options
+   * @return {*}
+   ********************************************************************************/
   createWindow(configurations, options) {
     var _a;
     let windowId = 0;
@@ -106,7 +128,6 @@ const _CreateWindow = class _CreateWindow {
       windowId = i;
       return o.route === configurations.route;
     })) {
-      console.info("window is already created");
       (_a = this.getWindowById(windowId + 1)) == null ? void 0 : _a.blur();
       return;
     }
@@ -126,7 +147,6 @@ const _CreateWindow = class _CreateWindow {
     }
     if (windowConfig.isMainWin) {
       if (_CreateWindow.main) {
-        console.info("main window already created");
         delete _CreateWindow.group[0];
         _CreateWindow.main.close();
       }
@@ -135,38 +155,71 @@ const _CreateWindow = class _CreateWindow {
     let that = this;
     win.on("close", () => {
       _CreateWindow.group.forEach((o, i) => {
-        if (this.getWindowById(o.windowId) == win) delete _CreateWindow.group[i];
-        if (win == that.main) electron.app.quit();
+        if (this.getWindowById(o.windowId) == win) {
+          win.webContents.closeDevTools();
+          delete _CreateWindow.group[i];
+        }
+        if (win == that.main) {
+          electron.app.quit();
+        }
       });
       win.setOpacity(0);
     });
+    win.on("ready-to-show", () => {
+      win.show();
+      win.focus();
+    });
     let winURL;
     if (electron.app.isPackaged) {
-      win.loadFile(path$1.join(__dirname, "../../dist/index.html"), {
+      win.loadFile(path$2.join(__dirname, "../../dist/index.html"), {
         hash: windowConfig.route
       });
     } else {
       winURL = windowConfig.route ? `${process.env.VITE_DEV_SERVER_URL}/#${windowConfig.route}` : `${process.env.VITE_DEV_SERVER_URL}}/#`;
       win.loadURL(winURL);
     }
-    console.info("new window address -> ", winURL);
     win.setMenu(null);
-    win.webContents.openDevTools();
+    {
+      win.webContents.on("did-finish-load", () => {
+        win.webContents.openDevTools({ mode: "detach" });
+      });
+      win.on("hide", () => win.webContents.closeDevTools());
+      electron.globalShortcut.register("CommandOrControl+Shift+i", function() {
+        win.webContents.openDevTools();
+      });
+    }
     win.once("ready-to-show", () => {
       win.show();
     });
-    return win;
   }
 };
-_CreateWindow.group = [];
 _CreateWindow.main = null;
+_CreateWindow.group = [];
+_CreateWindow.getMainWindow = () => {
+  return _CreateWindow.main;
+};
 let CreateWindow = _CreateWindow;
-const { app, protocol, BrowserWindow, ipcMain } = require("electron");
-require("path");
+const {
+  app,
+  protocol,
+  BrowserWindow,
+  screen,
+  ipcMain,
+  Menu,
+  Tray
+} = require("electron");
+const path = require("path");
 windowControlListener();
 ipcMain.on("window-create", (event, optionObj, configObj) => {
   let cw = new CreateWindow();
   cw.createWindow(optionObj, configObj);
+});
+ipcMain.on("store-set", (event, objData) => {
+  for (const cur of BrowserWindow.getAllWindows()) {
+    if (cur != BrowserWindow.fromWebContents(event.sender)) {
+      cur.webContents.send("store-get", objData);
+    }
+  }
 });
 const createMainWindow = async () => {
   let mainW = new CreateWindow();
@@ -176,20 +229,45 @@ const createMainWindow = async () => {
       isMainWin: true
     },
     {
-      width: 900,
-      height: 700
+      width: 600,
+      height: 500,
+      show: false
     }
   );
+  return mainW;
 };
 app.commandLine.appendSwitch("--ignore-certificate-errors", "true");
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
+let tray = null;
 app.whenReady().then(() => {
   createMainWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
   });
+  let iconPath = path.join(__dirname, "../../dist/icon.png");
+  console.info(iconPath);
+  tray = new Tray(iconPath);
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "显示窗口",
+      click: () => {
+        CreateWindow.getMainWindow().show();
+      }
+    },
+    // 显示窗口
+    {
+      label: "退出",
+      click: () => {
+        tray.destroy();
+        app.quit();
+      }
+    }
+    // 退出应用
+  ]);
+  tray.setContextMenu(contextMenu);
+  tray.setToolTip("Electron");
 });
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

@@ -1,14 +1,15 @@
 import {
   app,
   BrowserWindow,
-  globalShortcut,
-  IpcMainEvent,
-  ipcMain,
+  globalShortcut
 } from 'electron'
 import IWindowOption from '../interface/IWindowOption'
 import IWindowConfig from '../interface/IWindowConfig'
 import { join } from 'path'
 const path = require('path')
+
+// 是否开发环境
+const DEV = true
 
 // 窗口记录数组
 interface IGroup {
@@ -19,10 +20,10 @@ interface IGroup {
 }
 
 export default class CreateWindow {
-  // 路由与主窗口标识
-  private static group: IGroup = []
   // 记录主窗口
   private static main: BrowserWindow | null | undefined = null
+  // 路由与主窗口标识
+  private static group: IGroup = []
   // 窗口配置项
   private defaultConfig: IWindowConfig
   // 窗口默认配置
@@ -54,12 +55,12 @@ export default class CreateWindow {
       //设置为 false 时可以创建一个无边框窗口 默认值为 true。
       frame: false,
       //窗口是否在创建时显示。 默认值为 true。
-      show: true,
+      show: false,
       transparent: true,
       maxWidth: null,
       maxHeight: null,
-      minWidth: 680,
-      minHeight: 500,
+      minWidth: null,
+      minHeight: null,
       backgroundColor: 'rgba(0,0,0,0)',
       autoHideMenuBar: true,
       resizable: true,
@@ -84,14 +85,33 @@ export default class CreateWindow {
     }
   }
 
-  // 根据 id 的窗口
+  /********************************************************************************
+   * @brief: 获取主窗口
+   * @param {*} BrowserWindow
+   * @return {*}
+   ********************************************************************************/
+  public static getMainWindow = (): BrowserWindow => {
+    return CreateWindow.main
+  }
+
+  // 
+  /********************************************************************************
+   * @brief: 根据 id 获取窗口
+   * @param {number} id
+   * @return {*}
+   ********************************************************************************/
   public getWindowById = (id: number): any => {
     return BrowserWindow.fromId(id)
   }
 
-  // 创建窗口
-  public createWindow(configurations: object, options: object): BrowserWindow {
-    // console.info(CreateWindow.group)
+  /********************************************************************************
+   * @brief: 创建窗口
+   * @param {object} configurations
+   * @param {object} options
+   * @return {*}
+   ********************************************************************************/
+  public createWindow(configurations: object, options: object) {
+    // // console.info(CreateWindow.group)
     // 判断是否有页面
     let windowId: number = 0
     if (
@@ -100,7 +120,7 @@ export default class CreateWindow {
         return o.route === configurations.route
       })
     ) {
-      console.info('window is already created')
+      // console.info('window is already created')
       this.getWindowById(windowId + 1)?.blur()
       return
     }
@@ -114,7 +134,7 @@ export default class CreateWindow {
     }
     // 创建窗口
     let win = new BrowserWindow(windowOptions)
-    // console.info(windowOptions)
+    // // console.info(windowOptions)
     console.log('window id:' + win.id)
     // 记录路由与窗口 id
     CreateWindow.group[win.id - 1] = {
@@ -129,7 +149,7 @@ export default class CreateWindow {
     // 是否主窗口
     if (windowConfig.isMainWin) {
       if (CreateWindow.main) {
-        console.info('main window already created')
+        // console.info('main window already created')
         delete CreateWindow.group[0]
         CreateWindow.main.close()
       }
@@ -140,10 +160,21 @@ export default class CreateWindow {
     let that = this
     win.on('close', () => {
       CreateWindow.group.forEach((o, i) => {
-        if (this.getWindowById(o.windowId) == win) delete CreateWindow.group[i]
-        if (win == that.main) app.quit()
+        if (this.getWindowById(o.windowId) == win) {
+          win.webContents.closeDevTools()
+
+          delete CreateWindow.group[i]
+        }
+        if (win == that.main) {
+          app.quit()
+        }
       })
       win.setOpacity(0)
+    })
+
+    win.on('ready-to-show', () => {
+      win.show()
+      win.focus()
     })
 
     // 加载页面
@@ -157,22 +188,30 @@ export default class CreateWindow {
       winURL = windowConfig.route
         ? `${process.env.VITE_DEV_SERVER_URL}/#${windowConfig.route}`
         : `${process.env.VITE_DEV_SERVER_URL}}/#`
-      // console.info(process.env)
+      // // console.info(process.env)
       win.loadURL(winURL)
     }
-    console.info('new window address -> ', winURL)
+    // console.info('new window address -> ', winURL)
     win.setMenu(null)
-    // 开启开发工具窗口
-    win.webContents.openDevTools()
-    // win.on('hide', () => win.webContents.closeDevTools())
-    // 全局快捷键注册
-    // globalShortcut.register('CommandOrControl+Shift+i', function () {
-    //   win.webContents.openDevTools()
-    // })
+    // 配置开发环境调试信息
+    if (DEV) {
+      // 解决 Windows 无法正常打开开发者工具的问题 ↓
+      // let devtools = new BrowserWindow()
+      // win.webContents.setDevToolsWebContents(devtools.webContents)
+      // 打开开发者工具
+      // win.webContents.openDevTools({ mode: 'detach' })
+      win.webContents.on('did-finish-load', () => {
+        win.webContents.openDevTools({ mode: 'detach' })
+      })
+      win.on('hide', () => win.webContents.closeDevTools())
+      // 全局快捷键注册
+      globalShortcut.register('CommandOrControl+Shift+i', function () {
+        win.webContents.openDevTools()
+      })
+    }
+
     win.once('ready-to-show', () => {
       win.show()
     })
-    // 返回创建的窗口
-    return win
   }
 }

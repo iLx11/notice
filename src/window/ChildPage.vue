@@ -1,28 +1,20 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import WindowTitle from '../components/tools/WindowTitle.vue'
+import { XBox } from '@/utils/xBox/xBox.js'
 
 const win = window as any
-
-const createWindow = () => {
-  win.myApi.createNewWindow(
-    {
-      route: '/child1',
+onMounted(() => {
+  XBox.popMes('请调整坐姿', {
+    callback: () => {
+      win.myApi.closeWindow()
     },
-    {
-      width: 300,
-      height: 300,
-    }
-  )
-}
+  })
+})
 </script>
 
 <template>
-  <PopBox ref="popBoxRef" />
-  <div class="container">
-    <WindowTitle>
-      <div>ChildPage</div>
-    </WindowTitle>
-  </div>
+  <div class="container"></div>
 </template>
 
 <style lang="scss" scoped>
@@ -44,17 +36,16 @@ const createWindow = () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 0.1px solid rgba(173, 171, 171, 0.4);
-  border-radius: 16px;
-  overflow: hidden;
+  // border: 0.1px solid rgba(173, 171, 171, 0.4);
+  // border-radius: 16px;
+  // overflow: hidden;
 
-  box-sizing: border-box;
-  padding: 10px;
-  z-index: 2;
-  // box-shadow: 1.1px 0px 10.8px -34px rgba(0, 0, 0, 0.059), 7px 0px 81px -34px rgba(0, 0, 0, 0.12);
-  background: var(--content-box-color);
-  color: var(--text-color-1);
-  padding-bottom: 12px;
+  // box-sizing: border-box;
+  // padding: 10px;
+  // z-index: 2;
+  // // box-shadow: 1.1px 0px 10.8px -34px rgba(0, 0, 0, 0.059), 7px 0px 81px -34px rgba(0, 0, 0, 0.12);
+  // color: var(--text-color-1);
+  // padding-bottom: 12px;
   // -webkit-app-region: drag;
 }
 </style>

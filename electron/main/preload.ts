@@ -5,14 +5,23 @@ const createNewWindow = (optionObj: object, configObj: object) => {
   ipcRenderer.send('window-create', optionObj, configObj)
 }
 
+// 获取屏幕尺寸
+const getScreenSize = () => {
+  return ipcRenderer.invoke('get-screen-size')
+}
+// 固定窗口
+const setWindowOnTop = (state) => {
+  ipcRenderer.send('window-on-top', state)
+}
+
 // 最小化
 const minimizeWindow = () => {
   ipcRenderer.send('window-min')
 }
 
 // 最大化
-const maximizeWindow = () => {
-  ipcRenderer.send('window-max')
+const maximizeWindow = (state: boolean, windowSize = {}) => {
+  ipcRenderer.send('window-max', state, windowSize)
 }
 
 // 关闭窗口
@@ -20,11 +29,41 @@ const closeWindow = () => {
   ipcRenderer.send('window-close')
 }
 
+// 隐藏到托盘
+const hideWindow = () => {
+  ipcRenderer.send('window-hide')
+}
+
+/********************************************************************************
+ * @brief: 获取图片路径
+ * @return {*}
+ ********************************************************************************/
+const getImgPath = async () => {
+  return await ipcRenderer.invoke('img-path')
+}
+
+//获取文件路径
+const getFilePath = async () => {
+  return await ipcRenderer.invoke('select-file')
+}
+
+//获取文件夹路径
+const getDirPath = async () => {
+  return await ipcRenderer.invoke('select-dir')
+}
+
+
 contextBridge.exposeInMainWorld('myApi', {
   minimizeWindow,
   maximizeWindow,
+  setWindowOnTop,
   closeWindow,
-  createNewWindow
+  hideWindow,
+  createNewWindow,
+  getScreenSize,
+  getImgPath,
+  getFilePath,
+  getDirPath
 })
 // 所有的 Node.js API接口 都可以在 preload 进程中被调用.
 // 它拥有与Chrome扩展一样的沙盒。

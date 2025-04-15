@@ -3,20 +3,44 @@ const { contextBridge, ipcRenderer } = require("electron");
 const createNewWindow = (optionObj, configObj) => {
   ipcRenderer.send("window-create", optionObj, configObj);
 };
+const getScreenSize = () => {
+  return ipcRenderer.invoke("get-screen-size");
+};
+const setWindowOnTop = (state) => {
+  ipcRenderer.send("window-on-top", state);
+};
 const minimizeWindow = () => {
   ipcRenderer.send("window-min");
 };
-const maximizeWindow = () => {
-  ipcRenderer.send("window-max");
+const maximizeWindow = (state, windowSize = {}) => {
+  ipcRenderer.send("window-max", state, windowSize);
 };
 const closeWindow = () => {
   ipcRenderer.send("window-close");
 };
+const hideWindow = () => {
+  ipcRenderer.send("window-hide");
+};
+const getImgPath = async () => {
+  return await ipcRenderer.invoke("img-path");
+};
+const getFilePath = async () => {
+  return await ipcRenderer.invoke("select-file");
+};
+const getDirPath = async () => {
+  return await ipcRenderer.invoke("select-dir");
+};
 contextBridge.exposeInMainWorld("myApi", {
   minimizeWindow,
   maximizeWindow,
+  setWindowOnTop,
   closeWindow,
-  createNewWindow
+  hideWindow,
+  createNewWindow,
+  getScreenSize,
+  getImgPath,
+  getFilePath,
+  getDirPath
 });
 window.addEventListener("DOMContentLoaded", () => {
   const replaceText = (selector, text) => {

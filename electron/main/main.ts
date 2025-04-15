@@ -1,4 +1,12 @@
-const { app, protocol, BrowserWindow, ipcMain } = require('electron')
+const {
+  app,
+  protocol,
+  BrowserWindow,
+  screen,
+  ipcMain,
+  Menu,
+  Tray,
+} = require('electron')
 // 需在当前文件内开头引入 Node.js 的 'path' 模块
 const path = require('path')
 
@@ -14,6 +22,16 @@ ipcMain.on('window-create', (event, optionObj: object, configObj: object) => {
   cw.createWindow(optionObj, configObj)
 })
 
+// pinia
+ipcMain.on('store-set', (event, objData) => {
+  // 遍历窗口发送
+  for (const cur of BrowserWindow.getAllWindows()) {
+    if (cur != BrowserWindow.fromWebContents(event.sender)) {
+      cur.webContents.send('store-get', objData)
+    }
+  }
+})
+
 // 创建主窗口
 const createMainWindow = async () => {
   let mainW = new CreateWindow()
@@ -23,10 +41,12 @@ const createMainWindow = async () => {
       isMainWin: true,
     },
     {
-      width: 900,
-      height: 700,
+      width: 600,
+      height: 500,
+      show: false
     }
   )
+  return mainW
 }
 
 app.commandLine.appendSwitch('--ignore-certificate-errors', 'true')
@@ -35,12 +55,35 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } },
 ])
 
+let tray = null
+
 app.whenReady().then(() => {
   // 创建窗口
-  createMainWindow()
+  const win = createMainWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
+  // 创建托盘图标并设置上下文菜单
+  // let iconPath = 'icon.png'
+  let iconPath = path.join(__dirname, '../../dist/icon.png')
+  console.info(iconPath)
+  tray = new Tray(iconPath) // 这里替换为你的托盘图标路径
+  const contextMenu = Menu.buildFromTemplate([
+    { label: '显示窗口',
+      click: () => {
+        CreateWindow.getMainWindow().show()
+      }
+     }, // 显示窗口
+    {
+      label: '退出',
+      click: () => {
+        tray.destroy()
+        app.quit()
+      },
+    }, // 退出应用
+  ])
+  tray.setContextMenu(contextMenu)
+  tray.setToolTip('Electron')
 })
 
 // 关闭所有窗口
