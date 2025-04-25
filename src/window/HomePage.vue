@@ -2,6 +2,7 @@
 import WindowTools from '../components/tools/WindowTools.vue'
 import WindowTitle from '../components/tools/WindowTitle.vue'
 import checkBoxConfig from '../components/config/checkBoxConfig.vue'
+import NoticeList from '../components/notice/NoticeList.vue'
 import { onMounted, nextTick, ref, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { XBox } from '@/utils/xBox/xBox.js'
@@ -57,6 +58,9 @@ const createWindow = async () => {
     <WindowTitle>
       <div>HomePage</div>
     </WindowTitle>
+    <div id="main-content">
+      <NoticeList />
+    </div>
   </div>
 </template>
 
@@ -81,5 +85,10 @@ const createWindow = async () => {
   color: var(--text-color-1);
   overflow: hidden;
   // -webkit-app-region: drag;
+  #main-content {
+    width: 100%;
+    height: 100%;
+    // background: red;
+  }
 }
 </style>
