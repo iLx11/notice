@@ -1,0 +1,6 @@
+[submodule "src/utils/xComp"]
+	path = src/utils/xComp
+	url = git@github.com:iLx11/xComp.git
+[submodule "src/utils/xBox"]
+	path = src/utils/xBox
+	url = git@github.com:iLx11/xBox.git

@@ -15,7 +15,6 @@
     "electron:build": "rimraf dist && vite build && electron-builder"
   },
   "dependencies": {
-    "dayjs": "^1.11.13",
     "electron-store": "^8.1.0",
     "fs-extra": "^11.1.0",
     "pinia": "^2.1.6"

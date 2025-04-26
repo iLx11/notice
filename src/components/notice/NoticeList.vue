@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, reactive, computed, ref } from 'vue'
 import WindowTitle from '../components/tools/WindowTitle.vue'
 import { XBox } from '@/utils/xBox/xBox.js'
-import dayjs from 'dayjs'
+import SelectDropTool from '@/utils/xComp/select/SelectDropTool.vue'
 
 const win = window as any
 onMounted(() => {
@@ -36,21 +36,30 @@ const dailyConfig = computed(() => {
   return { hour: parseInt(hour), minute: parseInt(minute) }
 })
 
+// 可用的提醒类型列表
+const availableCategories = ['info', 'warning', 'error']
+
 /********************************************************************************
  * @brief: 添加提醒
  * @return {*}
  ********************************************************************************/
 function addReminder() {
+  if (!newReminder.text.trim()) {
+    XBox.popMes('请输入提醒内容', { type: 'err', style: [1, 1] })
+    return
+  }
   const reminder = {
     id: id++,
     text: newReminder.text,
     type: newReminder.type,
+    category: newReminder.category,
     timeConfig:
       newReminder.type === 'interval'
         ? { ...intervalConfig }
         : { ...dailyConfig.value },
     nextTrigger: null,
     timerId: null,
+    timer: 0,
   }
 
   scheduleReminder(reminder)
@@ -65,17 +74,18 @@ function addReminder() {
  * @param {*} reminder
  * @return {*}
  ********************************************************************************/
-const scheduleReminder = (reminder) => {
-  const now = Date.now()
-  const triggerTime = reminder.nextTrigger.getTime()
-  const delay = triggerTime - now
-
-  if (delay < 0) return
-
+const scheduleReminder = reminder => {
+  if (!reminder) return
+  const delayTime = Math.floor(
+    reminder.type === 'interval' && reminder.timeConfig.unit === 'minute' 
+      ? reminder.timeConfig.value * 60 * 1000 
+      : reminder.timeConfig.value * 60 * 60 * 1000
+  )
   reminder.timerId = setTimeout(() => {
     triggerReminder(reminder)
-    scheduleReminder(reminder)
-  }, delay)
+    // scheduleReminder(reminder)
+  }, delayTime)
+  console.info(reminders)
 }
 
 /********************************************************************************
@@ -83,12 +93,15 @@ const scheduleReminder = (reminder) => {
  * @param {*} reminder
  * @return {*}
  ********************************************************************************/
-const triggerReminder = (reminder) => {
+const triggerReminder = reminder => {
   // 使用浏览器通知
+  const options = {
+    body: reminder.text,
+    icon: reminder.category === 'error' ? 'error-icon.png' : 
+          reminder.category === 'warning' ? 'warning-icon.png' : 'info-icon.png'
+  };
   if (Notification.permission === 'granted') {
-    new Notification('提醒', {
-      body: reminder.text,
-    })
+    new Notification('提醒', options)
   } else if (Notification.permission !== 'denied') {
     Notification.requestPermission()
   }
@@ -101,7 +114,7 @@ const triggerReminder = (reminder) => {
  * @param {*} id
  * @return {*}
  ********************************************************************************/
-const removeReminder = (id) => {
+const removeReminder = id => {
   const index = reminders.findIndex(r => r.id === id)
   if (index > -1) {
     // 双重保障清除定时器
@@ -109,11 +122,6 @@ const removeReminder = (id) => {
     reminders[index].timerId = null
     reminders.splice(index, 1)
   }
-}
-
-// 格式化日期显示
-const formatDate = (date) => {
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
 }
 
 // 组件卸载时清除所有定时器
@@ -136,11 +144,22 @@ onUnmounted(() => {
           placeholder="提醒内容"
         />
 
-        <select v-model="newReminder.type">
+        <!-- <select v-model="newReminder.type">
           <option value="interval">间隔提醒</option>
           <option value="daily">每日定时</option>
-        </select>
+        </select> -->
 
+        <!-- 类型选择 -->
+        <select v-model="newReminder.category">
+          <option v-for="category in availableCategories" :key="category" :value="category">
+            {{ category === 'info' ? '信息' : category === 'warning' ? '警告' : '错误' }}
+          </option>
+        </select>
+        <!-- <SelectDropTool 
+
+        /> -->
+
+        <!-- 重复时间 -->
         <div v-if="newReminder.type === 'interval'">
           <input
             type="number"
@@ -152,7 +171,7 @@ onUnmounted(() => {
             <option value="hour">小时</option>
           </select>
         </div>
-
+        <!-- 固定时间 -->
         <div v-else>
           <input
             type="time"
@@ -176,7 +195,9 @@ onUnmounted(() => {
             <p>
               类型: {{ reminder.type === 'interval' ? '间隔提醒' : '每日定时' }}
             </p>
-            <p>下次触发: {{ formatDate(reminder.nextTrigger) }}</p>
+            <p>
+              分类: {{ reminder.category === 'info' ? '信息' : reminder.category === 'warning' ? '警告' : '错误' }}
+            </p>
           </div>
           <button @click="removeReminder(reminder.id)">删除</button>
         </div>
