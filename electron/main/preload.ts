@@ -64,6 +64,16 @@ const getDirPath = async () => {
   return await ipcRenderer.invoke('select-dir')
 }
 
+/********************************************************************************
+ * @brief: Pinia store 设置主动更改同步
+ * @param {object} obj 设置的对象
+ * @return {*}
+ ********************************************************************************/
+const setConfigStore = (obj: object) => {
+  // console.log(obj)
+  ipcRenderer.send('store-set', obj)
+}
+
 
 contextBridge.exposeInMainWorld('myApi', {
   setItem,
@@ -78,7 +88,13 @@ contextBridge.exposeInMainWorld('myApi', {
   getScreenSize,
   getImgPath,
   getFilePath,
-  getDirPath
+  getDirPath,
+  setConfigStore,
+  // Pinia store 设置被动同步监听
+  storeChangeListen: (callbacka) =>
+    ipcRenderer.on('store-get', (event, data) => {
+      callbacka(data)
+    }),
 })
 // 所有的 Node.js API接口 都可以在 preload 进程中被调用.
 // 它拥有与Chrome扩展一样的沙盒。

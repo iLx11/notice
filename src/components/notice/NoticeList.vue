@@ -3,15 +3,29 @@ import { onMounted, onUnmounted, reactive, computed, ref } from 'vue'
 import WindowTitle from '../components/tools/WindowTitle.vue'
 import { XBox } from '@/utils/xBox/xBox.js'
 import SelectDropTool from '@/utils/xComp/select/SelectDropTool.vue'
+import { useConfigStore } from '@/stores/configStore'
 
+const configStore = useConfigStore()
 const win = window as any
-onMounted(() => {
+onMounted(async () => {
   // XBox.popMes('请调整坐姿', {
   //   callback: () => {
   //     win.myApi.closeWindow()
   //   },
   // })
-  createWindow()
+  // createWindow()
+  // 获取 store 赋值数据
+  const storeReminders = await win.myApi.getItem('reminders')
+  if (storeReminders) {
+    // console.info(storeReminders)
+    const remindersData = JSON.parse(storeReminders)
+    // 赋值数组
+    remindersData.forEach((o) => {
+      scheduleReminder(o)
+      reminders.push(o)
+
+    })
+  }
 })
 // 提醒数据结构
 let id = 0
@@ -26,7 +40,7 @@ const newReminder = reactive({
 
 const intervalConfig = reactive({
   value: 5,
-  unit: 'minute',
+  unit: '分钟',
 })
 
 const dailyTime = ref('09:00')
@@ -97,6 +111,13 @@ function addReminder() {
     XBox.popMes('请输入提醒内容', { type: 'err', style: [1, 1] })
     return
   }
+  // selectDropData 的第一个元素的选中项
+  newReminder.category = selectDropData[0].list.find(
+    (o) => o.value == true
+  ).item || 'info'
+  intervalConfig.unit = selectDropData[1].list.find(
+    (o) => o.value == true 
+  ).item || '分钟'
   const reminder = {
     id: id++,
     text: newReminder.text,
@@ -112,9 +133,10 @@ function addReminder() {
 
   scheduleReminder(reminder)
   reminders.push(reminder)
-
   // 重置表单
   newReminder.text = ''
+  // 保存数据到 store
+  win.myApi.setItem('reminders', JSON.stringify(reminders))
 }
 
 /********************************************************************************
@@ -125,7 +147,7 @@ function addReminder() {
 const scheduleReminder = reminder => {
   if (!reminder) return
   const delayTime = Math.floor(
-    reminder.type === 'interval' && reminder.timeConfig.unit === 'minute'
+    reminder.type === 'interval' && reminder.timeConfig.unit === '分钟'
       ? reminder.timeConfig.value * 60 * 1000
       : reminder.timeConfig.value * 60 * 60 * 1000
   )
@@ -133,7 +155,7 @@ const scheduleReminder = reminder => {
     triggerReminder(reminder)
     // scheduleReminder(reminder)
   }, delayTime)
-  console.info(reminders)
+  // console.info(reminders)
 }
 
 /********************************************************************************
@@ -148,8 +170,14 @@ const triggerReminder = reminder => {
   // } else if (Notification.permission !== 'denied') {
   //   Notification.requestPermission()
   // }
+  // 配置数据
+  configStore.noticeData = reminder
+  // 发送其他窗口同步
+  if (typeof configStore['noticeData'] == 'object') {
+    win.myApi.setConfigStore({'noticeData': JSON.stringify(configStore.noticeData)})
+  }
   createWindow()
-  console.log(`提醒触发：${reminder.text}`)
+  // console.log(`提醒触发：${reminder.text}`)
 }
 
 /********************************************************************************
@@ -158,10 +186,6 @@ const triggerReminder = reminder => {
  ********************************************************************************/
 const createWindow = async () => {
   const { width, height } = await win.myApi.getScreenSize()
-  // console.log(router)
-  // console.log(router.currentRoute.value.path)
-  const winHeight = height * 0.1
-  console.log(winHeight)
   win.myApi.createNewWindow(
     {
       route: '/notice',
@@ -169,8 +193,9 @@ const createWindow = async () => {
     {
       width,
       maxWidth: width,
-      height: 110,
+      height: 200,
       alwaysOnTop: true,
+      focusable: false,
       modal: false,
       x: 0,
       y: 0,
@@ -191,6 +216,8 @@ const removeReminder = id => {
     reminders[index].timerId = null
     reminders.splice(index, 1)
   }
+  // 保存数据到 store
+  win.myApi.setItem('reminders', JSON.stringify(reminders))
 }
 
 // 组件卸载时清除所有定时器
@@ -327,7 +354,6 @@ const valueUpdate = (newObj: Object, config: Object) => {
     margin: 20px auto;
     // padding: 20px;
   }
-
   .add-reminder {
     margin-bottom: 20px;
     display: flex;
@@ -336,7 +362,7 @@ const valueUpdate = (newObj: Object, config: Object) => {
     padding: 20px;
     @include global.style_common(
       20px,
-      rgb(191, 228, 244),
+      rgba(163, 183, 185, 0.523),
       null,
       global.$shadow1
     );
@@ -347,7 +373,7 @@ const valueUpdate = (newObj: Object, config: Object) => {
       font-size: 18px;
       font-family: 'ceyy';
       @include global.style_common(
-        10px,
+        18px,
         rgba(255, 255, 255, 1),
         null,
         global.$shadow1
@@ -358,7 +384,7 @@ const valueUpdate = (newObj: Object, config: Object) => {
       @include global.wh(100%, 60px);
       @include global.style_common(
         20px,
-        rgb(249, 221, 221),
+        rgb(89, 99, 102),
         null,
         global.$shadow1
       );
@@ -366,6 +392,7 @@ const valueUpdate = (newObj: Object, config: Object) => {
       @include global.flex_center;
       font-size: 20px;
       cursor: pointer;
+      color: #ddd;
     }
   }
 
@@ -382,7 +409,7 @@ const valueUpdate = (newObj: Object, config: Object) => {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    >div {
+    > div {
       border-radius: 6px;
     }
     .content {

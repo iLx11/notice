@@ -151,6 +151,8 @@ const _CreateWindow = class _CreateWindow {
         _CreateWindow.main.close();
       }
       _CreateWindow.main = win;
+    } else {
+      win.setIgnoreMouseEvents(true, { forward: true });
     }
     let that = this;
     win.on("close", () => {
@@ -179,15 +181,6 @@ const _CreateWindow = class _CreateWindow {
       win.loadURL(winURL);
     }
     win.setMenu(null);
-    {
-      win.webContents.on("did-finish-load", () => {
-        win.webContents.openDevTools({ mode: "detach" });
-      });
-      win.on("hide", () => win.webContents.closeDevTools());
-      electron.globalShortcut.register("CommandOrControl+Shift+i", function() {
-        win.webContents.openDevTools();
-      });
-    }
     win.once("ready-to-show", () => {
       win.show();
     });

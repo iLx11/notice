@@ -14,7 +14,7 @@ import '@/utils/xBox/style/xBox.css'
 }
 
 :root {
-  --content-box-color: rgb(255, 255, 255);
+  --content-box-color: rgb(233, 233, 233);
   --pop-box-color: rgba(255, 255, 255, 0.95);
   --text-color-1: rgba(51, 51, 51, 0.85);
   --text-color-2: rgba(51, 51, 51, 0.5);

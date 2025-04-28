@@ -1,5 +1,14 @@
 "use strict";
 const { contextBridge, ipcRenderer } = require("electron");
+const setItem = (name, item) => {
+  ipcRenderer.send("set-item", name, item);
+};
+const getItem = async (name) => {
+  return await ipcRenderer.invoke("get-item", name);
+};
+const delItem = (name) => {
+  ipcRenderer.send("del-item", name);
+};
 const createNewWindow = (optionObj, configObj) => {
   ipcRenderer.send("window-create", optionObj, configObj);
 };
@@ -30,7 +39,13 @@ const getFilePath = async () => {
 const getDirPath = async () => {
   return await ipcRenderer.invoke("select-dir");
 };
+const setConfigStore = (obj) => {
+  ipcRenderer.send("store-set", obj);
+};
 contextBridge.exposeInMainWorld("myApi", {
+  setItem,
+  getItem,
+  delItem,
   minimizeWindow,
   maximizeWindow,
   setWindowOnTop,
@@ -40,7 +55,12 @@ contextBridge.exposeInMainWorld("myApi", {
   getScreenSize,
   getImgPath,
   getFilePath,
-  getDirPath
+  getDirPath,
+  setConfigStore,
+  // Pinia store 设置被动同步监听
+  storeChangeListen: (callbacka) => ipcRenderer.on("store-get", (event, data) => {
+    callbacka(data);
+  })
 });
 window.addEventListener("DOMContentLoaded", () => {
   const replaceText = (selector, text) => {

@@ -9,7 +9,7 @@ import { join } from 'path'
 const path = require('path')
 
 // 是否开发环境
-const DEV = true
+const DEV = false
 
 // 窗口记录数组
 interface IGroup {
@@ -155,6 +155,8 @@ export default class CreateWindow {
       }
       // 记录主窗口
       CreateWindow.main = win
+    } else {  
+      win.setIgnoreMouseEvents(true, { forward: true })
     }
     // 窗口被清除之后，清除存储
     let that = this

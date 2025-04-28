@@ -2,14 +2,57 @@
 import { onMounted } from 'vue'
 import WindowTitle from '../components/tools/WindowTitle.vue'
 import { XBox } from '@/utils/xBox/xBox.js'
+import { useConfigStore } from '@/stores/configStore'
 
+const configStore = useConfigStore()
 const win = window as any
+
+// 防抖函数
+const debounce = (func: Function, delay: number) => {
+  let timer: NodeJS.Timeout | null = null
+  return (...args: any[]) => {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => {
+      func(...args)
+      timer = null
+    }, delay)
+  }
+}
+
+// 窗口关闭函数
+const closeWindow = () => {
+  win.myApi.closeWindow()
+}
+
+// 防抖处理后的窗口关闭函数
+const debouncedCloseWindow = debounce(closeWindow, 2000)
+
 onMounted(() => {
-  XBox.popMes('请调整坐姿', {
-    callback: () => {
-      win.myApi.closeWindow()
-    },
-    style: [1, 1],
+  // 主页面监听
+  win.myApi.storeChangeListen((objData: object) => {
+    const keys = Object.keys(objData)
+    console.info(objData)
+    if (keys[0] === 'noticeData') {
+      const noticeData = JSON.parse(objData['noticeData'])
+      XBox.popMes(noticeData.text, {
+        callback: debouncedCloseWindow,
+        type: noticeData.category,
+        style: [1, 1],
+      })
+      return
+    }
+    for (let key of keys) {
+      // 设置对应 store 的
+      configStore[
+        `set${key.replace(key.charAt(0), key.charAt(0).toUpperCase())}`
+      ](objData[key])
+    }
+  })
+  // 获取 配置的索引
+  win.myApi.setConfigStore({
+    get: 'noticeData',
   })
 })
 </script>
@@ -31,27 +74,6 @@ onMounted(() => {
   z-index: 998;
 }
 .container {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: red;
-  -webkit-app-region: no-drag;
-
-  // 配置点击穿透
-  // -webkit-app-region: no-drag;
-  // border: 0.1px solid rgba(173, 171, 171, 0.4);
-  // border-radius: 16px;
-  // overflow: hidden;
-
-  // box-sizing: border-box;
-  // padding: 10px;
-  // z-index: 2;
-  // // box-shadow: 1.1px 0px 10.8px -34px rgba(0, 0, 0, 0.059), 7px 0px 81px -34px rgba(0, 0, 0, 0.12);
-  // color: var(--text-color-1);
-  // padding-bottom: 12px;
-  // -webkit-app-region: drag;
+  
 }
 </style>
