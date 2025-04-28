@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomePage from '../window/HomePage.vue'
-import ChildPage from '../window/ChildPage.vue'
+import ChildPage from '../window/NoticeBox.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -14,8 +14,8 @@ const router = createRouter({
       component: () => import('../window/HomePage.vue')
     },
     {
-      path: '/child',
-      component: () => import('../window/ChildPage.vue')
+      path: '/notice',
+      component: () => import('../window/NoticeBox.vue')
     }
   ]
 })

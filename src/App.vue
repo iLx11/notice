@@ -7,7 +7,7 @@ import '@/utils/xBox/style/xBox.css'
   <RouterView />
 </template>
 
-<style>
+<style lang="scss">
 @font-face {
   font-family: 'ceyy';
   src: url('./assets/font/ceyy.ttf');
@@ -28,6 +28,8 @@ import '@/utils/xBox/style/xBox.css'
   --text-color-2: rgba(51, 51, 51, 0.5);
   --span-text-color: rgb(143, 206, 202);
 }
+
+@include global.app_common;
 
 *::-webkit-scrollbar {
   display: none; /* Chrome Safari */

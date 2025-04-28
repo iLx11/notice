@@ -199,6 +199,17 @@ _CreateWindow.getMainWindow = () => {
   return _CreateWindow.main;
 };
 let CreateWindow = _CreateWindow;
+const Store = require("electron-store");
+const store = new Store();
+const setItem = (name, item) => {
+  store.set(name, item);
+};
+const getItem = (name) => {
+  return store.get(name);
+};
+const delItem = (name) => {
+  store.delete(name);
+};
 const {
   app,
   protocol,
@@ -210,6 +221,15 @@ const {
 } = require("electron");
 const path = require("path");
 windowControlListener();
+ipcMain.on("set-item", (event, name, item) => {
+  setItem(name, item);
+});
+ipcMain.on("del-item", (event, name) => {
+  delItem(name);
+});
+ipcMain.handle("get-item", async (event, name) => {
+  return await getItem(name);
+});
 ipcMain.on("window-create", (event, optionObj, configObj) => {
   let cw = new CreateWindow();
   cw.createWindow(optionObj, configObj);
@@ -229,8 +249,8 @@ const createMainWindow = async () => {
       isMainWin: true
     },
     {
-      width: 600,
-      height: 500,
+      width: 720,
+      height: 820,
       show: false
     }
   );

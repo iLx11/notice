@@ -9,6 +9,7 @@ onMounted(() => {
     callback: () => {
       win.myApi.closeWindow()
     },
+    style: [1, 1],
   })
 })
 </script>
@@ -36,6 +37,11 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  background: red;
+  -webkit-app-region: no-drag;
+
+  // 配置点击穿透
+  // -webkit-app-region: no-drag;
   // border: 0.1px solid rgba(173, 171, 171, 0.4);
   // border-radius: 16px;
   // overflow: hidden;
