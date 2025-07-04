@@ -1,6 +1,6 @@
 ## electron + vue + ts + pinia + sass + router 开发模板
 
-### 项目设置
+### 安装依赖
 
 ```
 pnpm install
@@ -21,6 +21,10 @@ pnpm start
 ```
 pnpm electron:build
 ```
+
+
+
+
 
 
 
